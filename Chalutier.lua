@@ -1,7 +1,8 @@
 local FSH_STATE_WAITING = 0
-local FSH_STATE_FISHING = 1
-local FSH_STATE_GOT     = 2
-local FSH_STATE_CAUGHT  = 3
+local FSH_STATE_NOBAIT  = 1
+local FSH_STATE_FISHING = 2
+local FSH_STATE_GOT     = 3
+local FSH_STATE_CAUGHT  = 4
 
 
 local currentState
@@ -11,6 +12,12 @@ local function changeState(state, arg2)
     if state == FSH_STATE_WAITING then
         if currentState == FSH_STATE_CAUGHT and not arg2 then return end
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+
+        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+    elseif state == FSH_STATE_NOBAIT then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/nobait.dds")
+        ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
@@ -52,8 +59,11 @@ end
 local currentInteractableName
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
+    local lureindex = GetFishingLure()
 
-    if action then
+    if action and (not lureindex) and  currentState < FSH_STATE_GOT then
+        changeState(FSH_STATE_NOBAIT)
+    elseif action then
         local state = FSH_STATE_WAITING
 
         if additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
@@ -116,6 +126,8 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
+    
+    currentState = FSH_STATE_WAITING
 end
 
 EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_ADD_ON_LOADED, function(...) Chalutier_OnAddOnLoad(...) end)

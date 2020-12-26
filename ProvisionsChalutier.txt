@@ -2,7 +2,7 @@
 ## Description: Pour la pêche. (For fishing)
 ## Author: |c00C000Provision|r
 ## SavedVariables: ProvChaSV
-## APIVersion: 100025, 100026
+## APIVersion: 100025, 100026, 100028
 ## Version: 1.0.2
 
 ; Trawler

@@ -92,7 +92,7 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 
     ProvCha.UI:SetHidden(not ProvCha.vars.enabled)
     ProvCha.UI:ClearAnchors()
-    ProvCha.UI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, ProvCha.vars.posx, ProvCha.vars.posy)
+    ProvCha.UI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 0, 0)
 
     ProvCha.UI.blocInfo = WINDOW_MANAGER:CreateControl(nil, ProvCha.UI, CT_TEXTURE)
     ProvCha.UI.blocInfo:SetDimensions(64, 6)
@@ -114,12 +114,6 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     SCENE_MANAGER:GetScene('hudui'):AddFragment(fragment)
 
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name, EVENT_ADD_ON_LOADED)
-
-
-    ProvCha.UI:SetHandler("OnMoveStop", function(...)
-        ProvCha.vars.posy = ProvCha.UI:GetTop()
-        ProvCha.vars.posx = ProvCha.UI:GetLeft()
-    end)
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)

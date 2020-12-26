@@ -123,7 +123,7 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 	EVENT_MANAGER:UnregisterForEvent(ProvCha.name, EVENT_ADD_ON_LOADED)
 
 
-	EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "Update", 3000, function()
+	ProvCha.UI:SetHandler("OnMoveStop", function(...)
 		ProvCha.vars.posy = ProvCha.UI:GetTop()
 		ProvCha.vars.posx = ProvCha.UI:GetLeft()
 	end)

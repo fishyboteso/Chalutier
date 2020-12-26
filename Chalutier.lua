@@ -11,38 +11,31 @@ local function changeState(state, arg2)
 
     if state == FSH_STATE_WAITING then
         if currentState == FSH_STATE_CAUGHT and not arg2 then return end
+        if currentState == FSH_STATE_GOT then ProvCha.UI.blocInfo:SetColor(1, 1, 1) end
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
-
+        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+
     elseif state == FSH_STATE_NOBAIT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/nobait.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+
     elseif state == FSH_STATE_FISHING then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fishing.dds")
         ProvCha.UI.blocInfo:SetColor(0.2980, 0.6118, 0.8392)
 
         EVENT_MANAGER:RegisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, Chalutier_OnSlotUpdate)
+
     elseif state == FSH_STATE_GOT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/got.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0.8, 0)
 
         EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "antiJobFictif", 3000, function()
             if currentState == FSH_STATE_GOT then changeState(FSH_STATE_WAITING) end
-        end)
-    elseif state == FSH_STATE_CAUGHT then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
-        ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
-
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
-        
-        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "champagne", 4000, function()
-            if currentState == FSH_STATE_CAUGHT then changeState(FSH_STATE_WAITING, true) end
-            EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "champagne")
         end)
     end
     currentState = state
@@ -51,8 +44,21 @@ end
 function Chalutier_OnSlotUpdate(event, bagId, slotIndex, isNew)
     if currentState == FSH_STATE_FISHING then
         changeState(FSH_STATE_GOT)
-    elseif currentState == FSH_STATE_GOT then
-        changeState(FSH_STATE_CAUGHT)
+    end
+end
+
+function _LootSceneCB(oldState, newState)
+    if newState == "showing" then
+        currentState = FSH_STATE_CAUGHT
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
+        ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+
+        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+    end
+    if newState == "hiding" then
+        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
+        changeState(FSH_STATE_WAITING, true)
     end
 end
 
@@ -68,11 +74,11 @@ function Chalutier_OnAction()
 
         if additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
             currentInteractableName = interactableName
-
             ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
         elseif currentInteractableName == interactableName then
             if currentState > FSH_STATE_FISHING then return end
 
+            LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
             state = FSH_STATE_FISHING
         end
 
@@ -118,15 +124,16 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     ProvCha.UI.Icon:SetHidden(false)
     ProvCha.UI.Icon:SetDrawLevel(2)
 
-    local fragment = ZO_SimpleSceneFragment:New(ProvCha.UI)
-    SCENE_MANAGER:GetScene('hud'):AddFragment(fragment)
-    SCENE_MANAGER:GetScene('hudui'):AddFragment(fragment)
+    local chalutier_fragment = ZO_SimpleSceneFragment:New(ProvCha.UI)
+    HUD_SCENE:AddFragment(chalutier_fragment)
+    HUD_UI_SCENE:AddFragment(chalutier_fragment)
+    LOOT_SCENE:AddFragment(chalutier_fragment)
 
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name, EVENT_ADD_ON_LOADED)
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
-    
+
     currentState = FSH_STATE_WAITING
 end
 

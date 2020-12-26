@@ -11,7 +11,6 @@ local function changeState(state, arg2)
     if state == FSH_STATE_WAITING then
         if currentState == FSH_STATE_CAUGHT and not arg2 then return end
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
-        ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
 
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
@@ -60,7 +59,7 @@ function Chalutier_OnAction()
         if additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
             currentInteractableName = interactableName
 
-            ProvCha.UI.blocInfo:SetHidden(false)
+            ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
         elseif currentInteractableName == interactableName then
             if currentState > FSH_STATE_FISHING then return end
 
@@ -70,9 +69,9 @@ function Chalutier_OnAction()
         changeState(state)
     elseif currentState ~= FSH_STATE_WAITING then
         changeState(FSH_STATE_WAITING)
-        ProvCha.UI.blocInfo:SetHidden(true)
+        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     else
-        ProvCha.UI.blocInfo:SetHidden(true)
+        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     end
 end
 
@@ -96,9 +95,9 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 
     ProvCha.UI.blocInfo = WINDOW_MANAGER:CreateControl(nil, ProvCha.UI, CT_TEXTURE)
     ProvCha.UI.blocInfo:SetDimensions(64, 6)
-    ProvCha.UI.blocInfo:SetColor(0.396, 0.27, 0)
+    ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     ProvCha.UI.blocInfo:SetAnchor(TOP, ProvCha.UI, TOP, 0, blocInfo)
-    ProvCha.UI.blocInfo:SetHidden(true)
+    ProvCha.UI.blocInfo:SetHidden(false)
     ProvCha.UI.blocInfo:SetDrawLevel(2)
 
     ProvCha.UI.Icon = WINDOW_MANAGER:CreateControl(nil, ProvCha.UI, CT_TEXTURE)

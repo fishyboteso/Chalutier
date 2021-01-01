@@ -13,4 +13,5 @@ ProvCha =
 		posx		= GuiRoot:GetWidth() / 2 - 485,
 		posy		= 0
 	}
+    currentState = 0
 }

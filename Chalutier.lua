@@ -1,28 +1,20 @@
 ProvCha_STATE_IDLE      = 0 --Running around, neither looking at an interactable nor fighting
-ProvCha_STATE_LOOKAWAY  = 1 --TODO A
-ProvCha_STATE_LOOKING   = 3 --TODO A
-ProvCha_STATE_NOBAIT    = 4 --Looking at a fishing hole, with no bait equipped
-ProvCha_STATE_FISHING   = 5 --Fishing
-ProvCha_STATE_REELIN    = 6 --Reel in!
-ProvCha_STATE_LOOT      = 7 --Lootscreen open, only right after Reel in!
-ProvCha_STATE_INVFULL   = 8 --No free inventory slots
-ProvCha_STATE_FIGHT     = 9 --TODO C
+ProvCha_STATE_LOOKAWAY  = 1 --Looking at an interactable which is NOT a fishing hole
+ProvCha_STATE_LOOKING   = 2 --Looking at a fishing hole
+ProvCha_STATE_NOBAIT    = 3 --Looking at a fishing hole, with NO bait equipped
+ProvCha_STATE_FISHING   = 4 --Fishing
+ProvCha_STATE_REELIN    = 5 --Reel in!
+ProvCha_STATE_LOOT      = 6 --Lootscreen open, only right after Reel in!
+ProvCha_STATE_INVFULL   = 7 --No free inventory slots
+ProvCha_STATE_FIGHT     = 8 --TODO C
 
 
 --local logger = LibDebugLogger(ProvCha.name)
 --[[
-[ ] TODO A: looking/lookaway
-    - on action, get interactable K
-    - if K not "fishing hole" then changeState(ProvCha_STATE_LOOKAWAY)
-    - elseif bait equipped then changeState(ProvCha_STATE_LOOKING)
-    - else changeState(ProvCha_STATE_NOBAIT)
-
 [ ] TODO C
     - register event combat ->
         if "fight started" then changeState(ProvCha_STATE_FIGHTING)
         if "fight stopped" then changeState(ProvCha_STATE_IDLE)
-
-[ ] set image/colors by state from table
 ]]--
 
 local function changeState(state, arg2)
@@ -33,6 +25,18 @@ local function changeState(state, arg2)
         if ProvCha.currentState == ProvCha_STATE_REELIN then ProvCha.UI.blocInfo:SetColor(1, 1, 1) end
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
         LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
+        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+
+    elseif state == ProvCha_STATE_LOOKAWAY then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+        ProvCha.UI.blocInfo:SetColor(0.3, 0, 0.3)
+        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+
+    elseif state == ProvCha_STATE_LOOKING then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+        ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
@@ -96,31 +100,43 @@ local function _LootSceneCB(oldState, newState)
     end
 end
 
-local currentInteractableName
+local tmpInteractableName = ""
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
-    local lureindex = GetFishingLure()
 
-    if action and (not lureindex) and  ProvCha.currentState < ProvCha_STATE_REELIN then
-        changeState(ProvCha_STATE_NOBAIT)
-    elseif action then
-        local state = ProvCha_STATE_IDLE
-
-        if additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
-            currentInteractableName = interactableName
-            ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
-        elseif currentInteractableName == interactableName then
-            if ProvCha.currentState > ProvCha_STATE_FISHING then return end
-
-            LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
-            state = ProvCha_STATE_FISHING
+    --we are looking at an interactable -> NOBAIT, LOOKING, LOOKAWAY, FISHING, REELIN+
+    --the interactable is a fishing hole -> NOBAIT, LOOKING
+    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
+        --there is NO bait equipped --> NOBAIT
+        if not GetFishingLure() then
+            changeState(ProvCha_STATE_NOBAIT)
+        --there is bait equipped --> LOOKING
+        else
+            --Fishing did not start --> LOOKING
+            if ProvCha.currentState < ProvCha_STATE_FISHING then
+                changeState(ProvCha_STATE_LOOKING)
+                tmpInteractableName = interactableName
+            end
+            --Fishing did start, We are waiting for some state change -> !!!HAZARD!!!
         end
 
-        changeState(state)
-    elseif ProvCha.currentState ~= ProvCha_STATE_IDLE then
-        changeState(ProvCha_STATE_IDLE)
-        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
+    --we are looking at an interactable that is not a fishing hole -> LOOKAWAY, FISHING, REELIN+
+    --last interactable name was the same fishing hole --> FISHING, REELIN+
+    elseif action and tmpInteractableName == interactableName then
+        --REELIN+
+        if ProvCha.currentState > ProvCha_STATE_FISHING then return end
+        --FISHING
+        LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
+        changeState(ProvCha_STATE_FISHING)
+
+    --we are looking at an interactable that is not a fishing hole --> LOOKAWAY
+    elseif action then
+        changeState(ProvCha_STATE_LOOKAWAY)
+        tmpInteractableName = ""
+
+    --we are not looking at an interactable --> IDLE
     else
+        changeState(ProvCha_STATE_IDLE)
         ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     end
 end

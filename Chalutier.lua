@@ -5,19 +5,17 @@ ProvCha_STATE_NOBAIT    = 4 --Looking at a fishing hole, with no bait equipped
 ProvCha_STATE_FISHING   = 5 --Fishing
 ProvCha_STATE_REELIN    = 6 --Reel in!
 ProvCha_STATE_LOOT      = 7 --Lootscreen open, only right after Reel in!
-ProvCha_STATE_INVFULL   = 8 --TODO B
+ProvCha_STATE_INVFULL   = 8 --No free inventory slots
 ProvCha_STATE_FIGHT     = 9 --TODO C
 
+
+--local logger = LibDebugLogger(ProvCha.name)
 --[[
 [ ] TODO A: looking/lookaway
     - on action, get interactable K
     - if K not "fishing hole" then changeState(ProvCha_STATE_LOOKAWAY)
     - elseif bait equipped then changeState(ProvCha_STATE_LOOKING)
     - else changeState(ProvCha_STATE_NOBAIT)
-
-[ ] TODO B
-    - if last_state == ProvCha_STATE_REELIN and currentstate == ProvCha_STATE_LOOT then
-        if "inv is full" then changeState(ProvCha_STATE_INVFULL) ...
 
 [ ] TODO C
     - register event combat ->
@@ -65,14 +63,29 @@ end
 function Chalutier_OnSlotUpdate(event, bagId, slotIndex, isNew)
     if ProvCha.currentState == ProvCha_STATE_FISHING then
         changeState(ProvCha_STATE_REELIN)
+        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
     end
 end
 
-function _LootSceneCB(oldState, newState)
+local function _inventoryFull()
+    local availableSlots = (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK))
+    if availableSlots <= 0 then
+        return true
+    else
+        return false
+    end
+end
+
+local function _LootSceneCB(oldState, newState)
     if newState == "showing" then
-        ProvCha.currentState = ProvCha_STATE_LOOT
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
-        ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+        if _inventoryFull() then
+            ProvCha.currentState = ProvCha_STATE_INVFULL
+            ProvCha.UI.blocInfo:SetColor(1, 0, 1)
+        else
+            ProvCha.currentState = ProvCha_STATE_LOOT
+            ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+        end
 
         EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
         EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)

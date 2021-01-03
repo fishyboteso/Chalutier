@@ -6,16 +6,15 @@ ProvCha_STATE_FISHING   = 4 --Fishing
 ProvCha_STATE_REELIN    = 5 --Reel in!
 ProvCha_STATE_LOOT      = 6 --Lootscreen open, only right after Reel in!
 ProvCha_STATE_INVFULL   = 7 --No free inventory slots
-ProvCha_STATE_FIGHT     = 8 --TODO C
+ProvCha_STATE_FIGHT     = 8 --TODO
 
-
-local logger = LibDebugLogger(ProvCha.name)
 --[[
-[ ] TODO C
-    - register event combat ->
-        if "fight started" then changeState(ProvCha_STATE_FIGHTING)
-        if "fight stopped" then changeState(ProvCha_STATE_IDLE)
+- register event combat ->
+    if "fight started" then changeState(ProvCha_STATE_FIGHTING)
+    if "fight stopped" then changeState(ProvCha_STATE_IDLE)
+- new images for LOOKAWAY, FIGHT
 ]]--
+--local logger = LibDebugLogger(ProvCha.name)
 
 local function changeState(state, arg2)
     if ProvCha.currentState == state then return end
@@ -31,7 +30,7 @@ local function changeState(state, arg2)
         ProvCha.UI.blocInfo:SetColor(0.3, 0, 0.3)
 
     elseif state == ProvCha_STATE_LOOKING then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/looking.dds")
         ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
 
     elseif state == ProvCha_STATE_NOBAIT then
@@ -48,7 +47,7 @@ local function changeState(state, arg2)
         end)
 
     elseif state == ProvCha_STATE_REELIN then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/got.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/reelin.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0.8, 0)
 
         EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "antiJobFictif", 3000, function()
@@ -56,12 +55,16 @@ local function changeState(state, arg2)
         end)
 
     elseif state == ProvCha_STATE_LOOT then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/loot.dds")
         ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
 
     elseif state == ProvCha_STATE_INVFULL then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/invfull.dds")
         ProvCha.UI.blocInfo:SetColor(1, 0, 1)
+
+    elseif state == ProvCha_STATE_FIGHT then -- TODO
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fight.dds")
+        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
 
     end
     ProvCha.currentState = state
@@ -103,6 +106,7 @@ function Chalutier_OnAction()
 
     else -- IDLE
         changeState(ProvCha_STATE_IDLE)
+        tmpInteractableName = ""
     end
 end
 

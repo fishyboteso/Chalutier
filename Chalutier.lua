@@ -68,6 +68,7 @@ local function changeState(state, arg2)
 
     end
     ProvCha.currentState = state
+    ProvCha.CallbackManager:FireCallbacks(ProvCha.name .. "StateChange", ProvCha.currentState)
 end
 
 function _LootSceneCB(oldState, newState)
@@ -114,6 +115,8 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     if (ProvCha.name ~= addOnName) then return end
 
     ProvCha.vars = ZO_SavedVars:NewAccountWide("ProvChaSV", 1, nil, ProvCha.defaults)
+
+    ProvCha.CallbackManager = ZO_CallbackObject:New()
 
     ProvCha.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
     ProvCha.UI:SetMouseEnabled(true)

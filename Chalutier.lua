@@ -9,7 +9,7 @@ ProvCha_STATE_INVFULL   = 7 --No free inventory slots
 ProvCha_STATE_FIGHT     = 8 --TODO C
 
 
---local logger = LibDebugLogger(ProvCha.name)
+local logger = LibDebugLogger(ProvCha.name)
 --[[
 [ ] TODO C
     - register event combat ->
@@ -19,39 +19,33 @@ ProvCha_STATE_FIGHT     = 8 --TODO C
 
 local function changeState(state, arg2)
     if ProvCha.currentState == state then return end
+    EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+    EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == ProvCha_STATE_IDLE then
-        if ProvCha.currentState == ProvCha_STATE_LOOT and not arg2 then return end
-        if ProvCha.currentState == ProvCha_STATE_REELIN then ProvCha.UI.blocInfo:SetColor(1, 1, 1) end
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
-        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
 
     elseif state == ProvCha_STATE_LOOKAWAY then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
         ProvCha.UI.blocInfo:SetColor(0.3, 0, 0.3)
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     elseif state == ProvCha_STATE_LOOKING then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
         ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     elseif state == ProvCha_STATE_NOBAIT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/nobait.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
-
     elseif state == ProvCha_STATE_FISHING then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fishing.dds")
         ProvCha.UI.blocInfo:SetColor(0.2980, 0.6118, 0.8392)
 
-        EVENT_MANAGER:RegisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, Chalutier_OnSlotUpdate)
+        LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
+        EVENT_MANAGER:RegisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
+            if ProvCha.currentState == ProvCha_STATE_FISHING then changeState(ProvCha_STATE_REELIN) end
+        end)
 
     elseif state == ProvCha_STATE_REELIN then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/got.dds")
@@ -60,43 +54,30 @@ local function changeState(state, arg2)
         EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "antiJobFictif", 3000, function()
             if ProvCha.currentState == ProvCha_STATE_REELIN then changeState(ProvCha_STATE_IDLE) end
         end)
+
+    elseif state == ProvCha_STATE_LOOT then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
+        ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+
+    elseif state == ProvCha_STATE_INVFULL then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
+        ProvCha.UI.blocInfo:SetColor(1, 0, 1)
+
     end
     ProvCha.currentState = state
 end
 
-function Chalutier_OnSlotUpdate(event, bagId, slotIndex, isNew)
-    if ProvCha.currentState == ProvCha_STATE_FISHING then
-        changeState(ProvCha_STATE_REELIN)
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
-    end
-end
-
-local function _inventoryFull()
-    local availableSlots = (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK))
-    if availableSlots <= 0 then
-        return true
-    else
-        return false
-    end
-end
-
-local function _LootSceneCB(oldState, newState)
-    if newState == "showing" then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/in_bag.dds")
-        if _inventoryFull() then
-            ProvCha.currentState = ProvCha_STATE_INVFULL
-            ProvCha.UI.blocInfo:SetColor(1, 0, 1)
+function _LootSceneCB(oldState, newState)
+    if newState == "showing" then -- LOOT, INVFULL
+        if (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK)) <= 0 then
+            changeState(ProvCha_STATE_INVFULL)
         else
-            ProvCha.currentState = ProvCha_STATE_LOOT
-            ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+            changeState(ProvCha_STATE_LOOT)
         end
-
-        EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
-        EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
     end
-    if newState == "hiding" then
+    if newState == "hiding" then -- IDLE
+        changeState(ProvCha_STATE_IDLE)
         LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
-        changeState(ProvCha_STATE_IDLE, true)
     end
 end
 
@@ -104,40 +85,24 @@ local tmpInteractableName = ""
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
-    --we are looking at an interactable -> NOBAIT, LOOKING, LOOKAWAY, FISHING, REELIN+
-    --the interactable is a fishing hole -> NOBAIT, LOOKING
-    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
-        --there is NO bait equipped --> NOBAIT
+    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then -- NOBAIT, LOOKING
         if not GetFishingLure() then
             changeState(ProvCha_STATE_NOBAIT)
-        --there is bait equipped --> LOOKING
-        else
-            --Fishing did not start --> LOOKING
-            if ProvCha.currentState < ProvCha_STATE_FISHING then
-                changeState(ProvCha_STATE_LOOKING)
-                tmpInteractableName = interactableName
-            end
-            --Fishing did start, We are waiting for some state change -> !!!HAZARD!!!
+        elseif ProvCha.currentState < ProvCha_STATE_FISHING then
+            changeState(ProvCha_STATE_LOOKING)
+            tmpInteractableName = interactableName
         end
 
-    --we are looking at an interactable that is not a fishing hole -> LOOKAWAY, FISHING, REELIN+
-    --last interactable name was the same fishing hole --> FISHING, REELIN+
-    elseif action and tmpInteractableName == interactableName then
-        --REELIN+
+    elseif action and tmpInteractableName == interactableName then -- FISHING, REELIN+
         if ProvCha.currentState > ProvCha_STATE_FISHING then return end
-        --FISHING
-        LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
         changeState(ProvCha_STATE_FISHING)
 
-    --we are looking at an interactable that is not a fishing hole --> LOOKAWAY
-    elseif action then
+    elseif action then -- LOOKAWAY
         changeState(ProvCha_STATE_LOOKAWAY)
         tmpInteractableName = ""
 
-    --we are not looking at an interactable --> IDLE
-    else
+    else -- IDLE
         changeState(ProvCha_STATE_IDLE)
-        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     end
 end
 

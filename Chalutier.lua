@@ -1,23 +1,21 @@
 ProvCha_STATE_IDLE      = 0 --Running around, neither looking at an interactable nor fighting
 ProvCha_STATE_LOOKAWAY  = 1 --Looking at an interactable which is NOT a fishing hole
 ProvCha_STATE_LOOKING   = 2 --Looking at a fishing hole
-ProvCha_STATE_NOBAIT    = 3 --Looking at a fishing hole, with NO bait equipped
-ProvCha_STATE_FISHING   = 4 --Fishing
-ProvCha_STATE_REELIN    = 5 --Reel in!
-ProvCha_STATE_LOOT      = 6 --Lootscreen open, only right after Reel in!
-ProvCha_STATE_INVFULL   = 7 --No free inventory slots
-ProvCha_STATE_FIGHT     = 8 --TODO
+ProvCha_STATE_NOBAIT    = 5 --Looking at a fishing hole, with NO bait equipped
+ProvCha_STATE_FISHING   = 6 --Fishing
+ProvCha_STATE_REELIN    = 7 --Reel in!
+ProvCha_STATE_LOOT      = 8 --Lootscreen open, only right after Reel in!
+ProvCha_STATE_INVFULL   = 9 --No free inventory slots
+ProvCha_STATE_FIGHT     = 14 --Fighting / Enemys taunted
+ProvCha_STATE_DEAD      = 15 --Dead
 
---[[
-- register event combat ->
-    if "fight started" then changeState(ProvCha_STATE_FIGHTING)
-    if "fight stopped" then changeState(ProvCha_STATE_IDLE)
-- new images for LOOKAWAY, FIGHT
-]]--
 --local logger = LibDebugLogger(ProvCha.name)
 
-local function changeState(state, arg2)
+local function changeState(state, overwrite)
     if ProvCha.currentState == state then return end
+
+    if ProvCha.currentState == ProvCha_STATE_FIGHT and not overwrite then return end
+
     EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
@@ -56,15 +54,19 @@ local function changeState(state, arg2)
 
     elseif state == ProvCha_STATE_LOOT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/loot.dds")
-        ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+        ProvCha.UI.blocInfo:SetColor(0, 0, 0.8)
 
     elseif state == ProvCha_STATE_INVFULL then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/invfull.dds")
-        ProvCha.UI.blocInfo:SetColor(1, 0, 1)
+        ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
-    elseif state == ProvCha_STATE_FIGHT then -- TODO
+    elseif state == ProvCha_STATE_FIGHT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fight.dds")
-        ProvCha.UI.blocInfo:SetColor(1, 1, 1)
+        ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
+
+    elseif state == ProvCha_STATE_DEAD then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/dead.dds")
+        ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
     end
     ProvCha.currentState = state
@@ -155,6 +157,16 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
+
+    EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_DEAD, function(eventCode) changeState(ProvCha_STATE_DEAD, true) end)
+    EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_ALIVE, function(eventCode) changeState(ProvCha_STATE_IDLE) end)
+    EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_COMBAT_STATE, function(eventCode, inCombat)
+        if inCombat then
+            changeState(ProvCha_STATE_FIGHT)
+        elseif ProvCha.currentState == ProvCha_STATE_FIGHT then
+            changeState(ProvCha_STATE_IDLE, true)
+        end
+    end)
 
     ProvCha.currentState = ProvCha_STATE_IDLE
 end

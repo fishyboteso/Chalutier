@@ -17,6 +17,7 @@ local function changeState(state, overwrite)
     if ProvCha.currentState == ProvCha_STATE_FIGHT and not overwrite then return end
 
     EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+    EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_FISHING")
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == ProvCha_STATE_IDLE then
@@ -42,6 +43,9 @@ local function changeState(state, overwrite)
         LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
         EVENT_MANAGER:RegisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if ProvCha.currentState == ProvCha_STATE_FISHING then changeState(ProvCha_STATE_REELIN) end
+        end)
+        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "STATE_FISHING", 28000, function()
+            if ProvCha.currentState == ProvCha_STATE_FISHING then changeState(ProvCha_STATE_IDLE) end
         end)
 
     elseif state == ProvCha_STATE_REELIN then

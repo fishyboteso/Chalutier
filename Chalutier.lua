@@ -1,6 +1,7 @@
 ProvCha_STATE_IDLE      = 0 --Running around, neither looking at an interactable nor fighting
 ProvCha_STATE_LOOKAWAY  = 1 --Looking at an interactable which is NOT a fishing hole
 ProvCha_STATE_LOOKING   = 2 --Looking at a fishing hole
+ProvCha_STATE_DEPLETED  = 3 --fishing hole just depleted
 ProvCha_STATE_NOBAIT    = 5 --Looking at a fishing hole, with NO bait equipped
 ProvCha_STATE_FISHING   = 6 --Fishing
 ProvCha_STATE_REELIN    = 7 --Reel in!
@@ -34,8 +35,9 @@ local function changeState(state, overwrite)
 
     if ProvCha.currentState == ProvCha_STATE_FIGHT and not overwrite then return end
 
-    EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "antiJobFictif")
+    EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_REELIN")
     EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_FISHING")
+    EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_DEPLETED")
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == ProvCha_STATE_IDLE then
@@ -49,6 +51,13 @@ local function changeState(state, overwrite)
     elseif state == ProvCha_STATE_LOOKING then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/looking.dds")
         ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
+
+    elseif state == ProvCha_STATE_DEPLETED then
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/depleted.dds")
+        ProvCha.UI.blocInfo:SetColor(0, 0.3, 0.3)
+        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "STATE_DEPLETED", 3000, function()
+            if ProvCha.currentState == ProvCha_STATE_DEPLETED then changeState(ProvCha_STATE_IDLE) end
+        end)
 
     elseif state == ProvCha_STATE_NOBAIT then
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/nobait.dds")
@@ -70,7 +79,7 @@ local function changeState(state, overwrite)
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/reelin.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0.8, 0)
 
-        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "antiJobFictif", 3000, function()
+        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "STATE_REELIN", 3000, function()
             if ProvCha.currentState == ProvCha_STATE_REELIN then changeState(ProvCha_STATE_IDLE) end
         end)
 
@@ -95,6 +104,18 @@ local function changeState(state, overwrite)
     ProvCha.CallbackManager:FireCallbacks(ProvCha.name .. "StateChange", ProvCha.currentState)
 end
 
+local function lootRelease()
+    local action, _, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
+    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
+        changeState(ProvCha_STATE_LOOKING)
+    elseif action then
+        --lookaway
+        changeState(ProvCha_STATE_LOOKAWAY)
+    else
+        changeState(ProvCha_STATE_DEPLETED)
+    end
+end
+
 function _LootSceneCB(oldState, newState)
     if newState == "showing" then -- LOOT, INVFULL
         if (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK)) <= 0 then
@@ -104,7 +125,7 @@ function _LootSceneCB(oldState, newState)
         end
     end
     if newState == "hiding" then -- IDLE
-        changeState(ProvCha_STATE_IDLE)
+        lootRelease()
         LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
     end
 end
@@ -129,7 +150,7 @@ function Chalutier_OnAction()
         changeState(ProvCha_STATE_LOOKAWAY)
         tmpInteractableName = ""
 
-    else -- IDLE
+    elseif ProvCha.currentState ~= ProvCha_STATE_DEPLETED then -- IDLE
         changeState(ProvCha_STATE_IDLE)
         tmpInteractableName = ""
     end

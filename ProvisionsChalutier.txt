@@ -1,14 +1,11 @@
-## Title: |c00C000Prov|r's Chalutier 1.0.4 (Fishing)
-## Description: Pour la pêche. (For fishing)
-## Author: |c00C000Provision|r
+## Title: Provivions Chalutier
+## Description: Icon for fishing state and more.
+## Author: Provision, Sem
 ## SavedVariables: ProvChaSV
 ## APIVersion: 100025, 100026, 100028
 ## Version: 1.0.4
 ## AddOnVersion: 104
 
 ## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the United States and/or other countries. All rights reserved.
-
-; Trawler
-header.lua
 
 Chalutier.lua

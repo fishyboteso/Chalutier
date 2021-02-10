@@ -9,6 +9,24 @@ ProvCha_STATE_INVFULL   = 9 --No free inventory slots
 ProvCha_STATE_FIGHT     = 14 --Fighting / Enemys taunted
 ProvCha_STATE_DEAD      = 15 --Dead
 
+ProvCha =
+{
+    name        = "ProvisionsChalutier",
+    namePublic  = "Provisions Chalutier",
+    nameColor   = "Chalutier",
+    author      = "Provision, Sem",
+    version     = "1.0.4",
+    CPL         = nil,
+    defaults    =
+    {
+        enabled = true,
+        posx    = GuiRoot:GetWidth() / 2 - 485,
+        posy    = 0
+    },
+    currentState = 0
+}
+
+
 --local logger = LibDebugLogger(ProvCha.name)
 
 local function changeState(state, overwrite)

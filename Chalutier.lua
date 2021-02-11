@@ -139,7 +139,11 @@ local tmpInteractableName = ""
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
-    if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then -- NOBAIT, LOOKING
+    if action and IsPlayerTryingToMove() and ProvCha.currentState < ProvCha_STATE_FISHING then
+        changeState(ProvCha_STATE_LOOKAWAY)
+        tmpInteractableName = ""
+
+    elseif action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then -- NOBAIT, LOOKING
         if not GetFishingLure() then
             changeState(ProvCha_STATE_NOBAIT)
         elseif ProvCha.currentState < ProvCha_STATE_FISHING then

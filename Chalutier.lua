@@ -136,17 +136,25 @@ function _LootSceneCB(oldState, newState)
 end
 
 local tmpInteractableName = ""
+local tmpNotMoving = true
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
     if action and IsPlayerTryingToMove() and ProvCha.currentState < ProvCha_STATE_FISHING then
         changeState(ProvCha_STATE_LOOKAWAY)
         tmpInteractableName = ""
+        tmpNotMoving = false
+        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "MOVING", 500, function()
+            EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "MOVING")
+            if not IsPlayerTryingToMove() then
+                tmpNotMoving = true
+            end
+        end)
 
     elseif action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then -- NOBAIT, LOOKING
         if not GetFishingLure() then
             changeState(ProvCha_STATE_NOBAIT)
-        elseif ProvCha.currentState < ProvCha_STATE_FISHING then
+        elseif ProvCha.currentState < ProvCha_STATE_FISHING and tmpNotMoving then
             changeState(ProvCha_STATE_LOOKING)
             tmpInteractableName = interactableName
         end

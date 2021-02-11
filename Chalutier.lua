@@ -24,9 +24,9 @@ ProvCha =
         posx    = GuiRoot:GetWidth() / 2 - 485,
         posy    = 0
     },
-    currentState = 0
+    currentState = 0,
+    angle = 0
 }
-
 
 --local logger = LibDebugLogger(ProvCha.name)
 
@@ -67,6 +67,8 @@ local function changeState(state, overwrite)
         ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fishing.dds")
         ProvCha.UI.blocInfo:SetColor(0.2980, 0.6118, 0.8392)
 
+        ProvCha.angle = (math.deg(GetPlayerCameraHeading())-180) % 360
+
         LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
         EVENT_MANAGER:RegisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if ProvCha.currentState == ProvCha_STATE_FISHING then changeState(ProvCha_STATE_REELIN) end
@@ -106,13 +108,16 @@ end
 
 local function lootRelease()
     local action, _, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
+    local angleDiv = ((math.deg(GetPlayerCameraHeading())-180) % 360) - ProvCha.angle
+
     if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
         changeState(ProvCha_STATE_LOOKING)
     elseif action then
-        --lookaway
         changeState(ProvCha_STATE_LOOKAWAY)
-    else
+    elseif -30 < angleDiv and angleDiv < 30 then
         changeState(ProvCha_STATE_DEPLETED)
+    else
+        changeState(ProvCha_STATE_IDLE)
     end
 end
 

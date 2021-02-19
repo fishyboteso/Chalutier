@@ -147,7 +147,7 @@ function Chalutier_OnAction()
         changeState(ProvCha_STATE_LOOKAWAY)
         tmpInteractableName = ""
         tmpNotMoving = false
-        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "MOVING", 500, function()
+        EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "MOVING", 750, function()
             EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "MOVING")
             if not IsPlayerTryingToMove() then
                 tmpNotMoving = true

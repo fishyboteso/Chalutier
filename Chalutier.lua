@@ -189,8 +189,8 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     ProvCha.UI:SetMovable(true)
     ProvCha.UI:SetDimensions(64, 92)
     ProvCha.UI:SetDrawLevel(0)
-    ProvCha.UI:SetDrawLayer(0)
-    ProvCha.UI:SetDrawTier(0)
+    ProvCha.UI:SetDrawLayer(DL_MAX_VALUE-1)
+    ProvCha.UI:SetDrawTier(DT_MAX_VALUE-1)
 
     ProvCha.UI:SetHidden(not ProvCha.vars.enabled)
     ProvCha.UI:ClearAnchors()
@@ -201,7 +201,9 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     ProvCha.UI.blocInfo:SetColor(1, 1, 1)
     ProvCha.UI.blocInfo:SetAnchor(TOP, ProvCha.UI, TOP, 0, blocInfo)
     ProvCha.UI.blocInfo:SetHidden(false)
-    ProvCha.UI.blocInfo:SetDrawLevel(1)
+    ProvCha.UI.blocInfo:SetDrawLevel(0)
+    ProvCha.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
+    ProvCha.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
 
     ProvCha.UI.Icon = WINDOW_MANAGER:CreateControl(nil, ProvCha.UI, CT_TEXTURE)
     ProvCha.UI.Icon:SetBlendMode(TEX_BLEND_MODE_ALPHA)
@@ -209,7 +211,9 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     ProvCha.UI.Icon:SetDimensions(64, 64)
     ProvCha.UI.Icon:SetAnchor(TOPLEFT, ProvCha.UI, TOPLEFT, 0, 18)
     ProvCha.UI.Icon:SetHidden(false)
-    ProvCha.UI.Icon:SetDrawLevel(1)
+    ProvCha.UI.Icon:SetDrawLevel(0)
+    ProvCha.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
+    ProvCha.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
 
     local chalutier_fragment = ZO_SimpleSceneFragment:New(ProvCha.UI)
     HUD_SCENE:AddFragment(chalutier_fragment)
@@ -234,6 +238,11 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     end)
 
     ProvCha.currentState = ProvCha_STATE_IDLE
+
+    if libMainMenuSubcategoryButton then
+        libMainMenuSubcategoryButton:SetDrawLayer(DL_MIN_VALUE)
+        libMainMenuSubcategoryButton:SetDrawTier(DT_MIN_VALUE)
+    end
 end
 
 EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_ADD_ON_LOADED, function(...) Chalutier_OnAddOnLoad(...) end)

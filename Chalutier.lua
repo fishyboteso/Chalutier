@@ -25,7 +25,8 @@ ProvCha =
         posy    = 0
     },
     currentState = 0,
-    angle = 0
+    angle = 0,
+    swimming = false
 }
 
 --local logger = LibDebugLogger(ProvCha.name)
@@ -34,6 +35,8 @@ local function changeState(state, overwrite)
     if ProvCha.currentState == state then return end
 
     if ProvCha.currentState == ProvCha_STATE_FIGHT and not overwrite then return end
+
+    if ProvCha.swimming and state == ProvCha_STATE_LOOKING then state = ProvCha_STATE_LOOKAWAY end
 
     EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_REELIN")
     EVENT_MANAGER:UnregisterForUpdate(ProvCha.name .. "STATE_FISHING")
@@ -218,6 +221,8 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
 
+    EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_SWIMMING, function(eventCode) ProvCha.swimming = true end)
+    EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_NOT_SWIMMING, function(eventCode) ProvCha.swimming = false end)
     EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_DEAD, function(eventCode) changeState(ProvCha_STATE_DEAD, true) end)
     EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_ALIVE, function(eventCode) changeState(ProvCha_STATE_IDLE) end)
     EVENT_MANAGER:RegisterForEvent(ProvCha.name, EVENT_PLAYER_COMBAT_STATE, function(eventCode, inCombat)

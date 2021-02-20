@@ -13,20 +13,17 @@ ProvCha_STATE_DEAD      = 15 --Dead
 ProvCha =
 {
     name        = "ProvisionsChalutier",
-    namePublic  = "Provisions Chalutier",
-    nameColor   = "Chalutier",
-    author      = "Provision, Sem",
-    version     = "1.0.4",
-    CPL         = nil,
+
+    currentState = 0,
+    angle = 0,
+    swimming = false,
+
     defaults    =
     {
         enabled = true,
         posx    = GuiRoot:GetWidth() / 2 - 485,
         posy    = 0
-    },
-    currentState = 0,
-    angle = 0,
-    swimming = false
+    }
 }
 
 --local logger = LibDebugLogger(ProvCha.name)
@@ -44,30 +41,30 @@ local function changeState(state, overwrite)
     EVENT_MANAGER:UnregisterForEvent(ProvCha.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == ProvCha_STATE_IDLE then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/idle.dds")
         ProvCha.UI.blocInfo:SetColor(1, 1, 1)
 
     elseif state == ProvCha_STATE_LOOKAWAY then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/idle.dds")
         ProvCha.UI.blocInfo:SetColor(0.3, 0, 0.3)
 
     elseif state == ProvCha_STATE_LOOKING then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/looking.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/looking.dds")
         ProvCha.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
 
     elseif state == ProvCha_STATE_DEPLETED then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/depleted.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/depleted.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0.3, 0.3)
         EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "STATE_DEPLETED", 3000, function()
             if ProvCha.currentState == ProvCha_STATE_DEPLETED then changeState(ProvCha_STATE_IDLE) end
         end)
 
     elseif state == ProvCha_STATE_NOBAIT then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/nobait.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/nobait.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
     elseif state == ProvCha_STATE_FISHING then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fishing.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/fishing.dds")
         ProvCha.UI.blocInfo:SetColor(0.2980, 0.6118, 0.8392)
 
         ProvCha.angle = (math.deg(GetPlayerCameraHeading())-180) % 360
@@ -81,7 +78,7 @@ local function changeState(state, overwrite)
         end)
 
     elseif state == ProvCha_STATE_REELIN then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/reelin.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/reelin.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0.8, 0)
 
         EVENT_MANAGER:RegisterForUpdate(ProvCha.name .. "STATE_REELIN", 3000, function()
@@ -89,19 +86,19 @@ local function changeState(state, overwrite)
         end)
 
     elseif state == ProvCha_STATE_LOOT then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/loot.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/loot.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0.8)
 
     elseif state == ProvCha_STATE_INVFULL then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/invfull.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/invfull.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
     elseif state == ProvCha_STATE_FIGHT then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/fight.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/fight.dds")
         ProvCha.UI.blocInfo:SetColor(0.8, 0, 0)
 
     elseif state == ProvCha_STATE_DEAD then
-        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/dead.dds")
+        ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/dead.dds")
         ProvCha.UI.blocInfo:SetColor(0, 0, 0)
 
     end
@@ -207,7 +204,7 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
 
     ProvCha.UI.Icon = WINDOW_MANAGER:CreateControl(nil, ProvCha.UI, CT_TEXTURE)
     ProvCha.UI.Icon:SetBlendMode(TEX_BLEND_MODE_ALPHA)
-    ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/icon_dds/waiting.dds")
+    ProvCha.UI.Icon:SetTexture("ProvisionsChalutier/textures/idle.dds")
     ProvCha.UI.Icon:SetDimensions(64, 64)
     ProvCha.UI.Icon:SetAnchor(TOPLEFT, ProvCha.UI, TOPLEFT, 0, 18)
     ProvCha.UI.Icon:SetHidden(false)

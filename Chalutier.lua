@@ -43,6 +43,7 @@ Chalutier.defaults  = {
 }
 
 --local logger = LibDebugLogger(Chalutier.name)
+local LMM2 = LibAddonMenu2
 
 local function _changeState(state, overwrite)
     if Chalutier.currentState == state then return end
@@ -194,6 +195,75 @@ local function _createUI()
     LOOT_SCENE:AddFragment(chalutier_fragment)
 end
 
+local function _createMenu()
+    local panelName = "ChalutierSettingsPanel"
+
+    local panelData = {
+        type = "panel",
+        name = Chalutier.name,
+        displayName = Chalutier.name,
+        author = "Provision, Sem",
+        registerForRefresh = true,
+        registerForDefaults = true,
+    }
+    local panel = LMM2:RegisterAddonPanel(panelName, panelData)
+    local optionsData = {
+        {
+            type = "description",
+            text = "Here you can setup Chalutiers configs."
+        },
+        {
+            type = "checkbox",
+            name = "Enabled",
+            default = true,
+            disabled = false,
+            getFunc = function() return Chalutier.SavedVariables.enabled end,
+            setFunc = function(value)
+                Chalutier.SavedVariables.enabled = value
+                Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
+                Chalutier.UI.blocInfo:SetHidden(not Chalutier.SavedVariables.enabled)
+                Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)
+            end
+        },
+        {
+            type = "button",
+            name = "move to top left corner",
+            default = true,
+            disabled = false,
+            func = function()
+                Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.anchorRel = 3, 3
+                Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy = 0, 0
+                Chalutier.UI:ClearAnchors()
+                Chalutier.UI:SetAnchor(Chalutier.SavedVariables.anchorRel, GuiRoot, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy)
+            end
+        },
+        {
+            type = "header",
+            name = "Colors"
+        },
+    }
+
+    for k,v in pairs(Chalutier.defaults.colors) do
+        local def = Chalutier.defaults.colors[k]
+        local sav = Chalutier.SavedVariables.colors[k]
+        optionsData[#optionsData + 1] = {
+            type = "colorpicker",
+            name = def.text,
+            getFunc = function()
+                return sav.r, sav.g, sav.b, sav.a
+            end,
+            setFunc = function(r,g,b,a)
+                sav.r, sav.g, sav.b, sav.a = r, g, b, a
+                Chalutier.SavedVariables.colors[k] = sav
+                Chalutier.UI.blocInfo:SetColor(sav.r, sav.g, sav.b, sav.a)
+            end,
+            default = {["r"] = def.r, ["g"] = def.g, ["b"] = def.b, ["a"] = def.a},
+        }
+    end
+
+    LMM2:RegisterOptionControls(panelName, optionsData)
+end
+
 local function _onAddOnLoad(eventCode, addOnName)
     if (Chalutier.name ~= addOnName) then return end
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED)
@@ -209,6 +279,7 @@ local function _onAddOnLoad(eventCode, addOnName)
     Chalutier.currentState = Chalutier.state.idle
 
     _createUI()
+    _createMenu()
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)

@@ -43,7 +43,7 @@ Chalutier.defaults  = {
 }
 
 --local logger = LibDebugLogger(Chalutier.name)
-local LMM2 = LibAddonMenu2
+local LAM2 = LibAddonMenu2
 
 local function _changeState(state, overwrite)
     if Chalutier.currentState == state then return end
@@ -206,7 +206,7 @@ local function _createMenu()
         registerForRefresh = true,
         registerForDefaults = true,
     }
-    local panel = LMM2:RegisterAddonPanel(panelName, panelData)
+    local panel = LAM2:RegisterAddonPanel(panelName, panelData)
     local optionsData = {
         {
             type = "description",
@@ -261,7 +261,7 @@ local function _createMenu()
         }
     end
 
-    LMM2:RegisterOptionControls(panelName, optionsData)
+    LAM2:RegisterOptionControls(panelName, optionsData)
 end
 
 local function _onAddOnLoad(eventCode, addOnName)

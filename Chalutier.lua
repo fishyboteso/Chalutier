@@ -1,136 +1,114 @@
-Chalutier_STATE_IDLE      = 0 --Running around, neither looking at an interactable nor fighting
-Chalutier_STATE_LOOKAWAY  = 1 --Looking at an interactable which is NOT a fishing hole
-Chalutier_STATE_LOOKING   = 2 --Looking at a fishing hole
-Chalutier_STATE_DEPLETED  = 3 --fishing hole just depleted
-Chalutier_STATE_NOBAIT    = 5 --Looking at a fishing hole, with NO bait equipped
-Chalutier_STATE_FISHING   = 6 --Fishing
-Chalutier_STATE_REELIN    = 7 --Reel in!
-Chalutier_STATE_LOOT      = 8 --Lootscreen open, only right after Reel in!
-Chalutier_STATE_INVFULL   = 9 --No free inventory slots
-Chalutier_STATE_FIGHT     = 14 --Fighting / Enemys taunted
-Chalutier_STATE_DEAD      = 15 --Dead
-
 Chalutier =
 {
-    name        = "Chalutier",
-
-    currentState = 0,
-    angle       = 0,
-    swimming    = false,
-
-    defaults    =
-    {
-        enabled = true,
-        posx    = GuiRoot:GetWidth() / 2 - 485,
-        posy    = 0
+    name            = "Chalutier",
+    currentState    = 0,
+    angle           = 0,
+    swimming        = false,
+    SavedVariables  = nil,
+    state           = {},
+    defaults        = {}
+}
+Chalutier.state     = {
+    idle      =  0, --Running around, neither looking at an interactable nor fighting
+    lookaway  =  1, --Looking at an interactable which is NOT a fishing hole
+    looking   =  2, --Looking at a fishing hole
+    depleted  =  3, --fishing hole just depleted
+    nobait    =  5, --Looking at a fishing hole, with NO bait equipped
+    fishing   =  6, --Fishing
+    reelin    =  7, --Reel in!
+    loot      =  8, --Lootscreen open, only right after Reel in!
+    invfull   =  9, --No free inventory slots
+    fight     = 14, --Fighting / Enemys taunted
+    dead      = 15  --Dead
+}
+Chalutier.defaults  = {
+    enabled = true,
+    posx        = 0,
+    posy        = 0,
+    anchor      = 3,
+    anchorRel   = 3,
+    colors      = {
+        [ 0] = { icon = "idle", text = "Idle",  r = 1, g = 1, b = 1, a = 1 },
+        [ 1] = { icon = "idle", text = "Looking Away", r = 0.3, g = 0, b = 0.3, a = 1 },
+        [ 2] = { icon = "looking", text = "Looking at Fishing Hole", r = 0.3961, g = 0.2706, b = 0, a = 1 },
+        [ 3] = { icon = "depleted", text = "Fishing Hole Depleted", r = 0, g = 0.3, b = 0.3, a = 1 },
+        [ 5] = { icon = "nobait", text = "No Bait Equipped", r = 0, g = 0, b = 0, a = 1 },
+        [ 6] = { icon = "fishing", text = "Fishing", r = 0.2980, g = 0.6118, b = 0.8392, a = 1 },
+        [ 7] = { icon = "reelin", text = "Reel In!", r = 0, g = 0.8, b = 0, a = 1 },
+        [ 8] = { icon = "loot", text = "Loot Menu", r = 0, g = 0, b = 0.8, a = 1 },
+        [ 9] = { icon = "invfull", text = "Inventory Full", r = 0, g = 0, b = 0, a = 1 },
+        [14] = { icon = "fight", text = "Fighting", r = 0.8, g = 0, b = 0, a = 1 },
+        [15] = { icon = "dead", text = "Dead", r = 0, g = 0, b = 0, a = 1 }
     }
 }
 
 --local logger = LibDebugLogger(Chalutier.name)
 
-local function changeState(state, overwrite)
+local function _changeState(state, overwrite)
     if Chalutier.currentState == state then return end
 
-    if Chalutier.currentState == Chalutier_STATE_FIGHT and not overwrite then return end
+    if Chalutier.currentState == Chalutier.state.fight and not overwrite then return end
 
-    if Chalutier.swimming and state == Chalutier_STATE_LOOKING then state = Chalutier_STATE_LOOKAWAY end
+    if Chalutier.swimming and state == Chalutier.state.looking then state = Chalutier.state.lookaway end
 
     EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_REELIN")
     EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_FISHING")
     EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_DEPLETED")
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
-    if state == Chalutier_STATE_IDLE then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/idle.dds")
-        Chalutier.UI.blocInfo:SetColor(1, 1, 1)
-
-    elseif state == Chalutier_STATE_LOOKAWAY then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/idle.dds")
-        Chalutier.UI.blocInfo:SetColor(0.3, 0, 0.3)
-
-    elseif state == Chalutier_STATE_LOOKING then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/looking.dds")
-        Chalutier.UI.blocInfo:SetColor(0.3961, 0.2706, 0)
-
-    elseif state == Chalutier_STATE_DEPLETED then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/depleted.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0.3, 0.3)
+    if state == Chalutier.state.depleted then
         EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_DEPLETED", 3000, function()
-            if Chalutier.currentState == Chalutier_STATE_DEPLETED then changeState(Chalutier_STATE_IDLE) end
+            if Chalutier.currentState == Chalutier.state.depleted then _changeState(Chalutier.state.idle) end
         end)
 
-    elseif state == Chalutier_STATE_NOBAIT then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/nobait.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0, 0)
-
-    elseif state == Chalutier_STATE_FISHING then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/fishing.dds")
-        Chalutier.UI.blocInfo:SetColor(0.2980, 0.6118, 0.8392)
-
+    elseif state == Chalutier.state.fishing then
         Chalutier.angle = (math.deg(GetPlayerCameraHeading())-180) % 360
 
         LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
         EVENT_MANAGER:RegisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
-            if Chalutier.currentState == Chalutier_STATE_FISHING then changeState(Chalutier_STATE_REELIN) end
+            if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.reelin) end
         end)
         EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_FISHING", 28000, function()
-            if Chalutier.currentState == Chalutier_STATE_FISHING then changeState(Chalutier_STATE_IDLE) end
+            if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.idle) end
         end)
 
-    elseif state == Chalutier_STATE_REELIN then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/reelin.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0.8, 0)
-
+    elseif state == Chalutier.state.reelin then
         EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_REELIN", 3000, function()
-            if Chalutier.currentState == Chalutier_STATE_REELIN then changeState(Chalutier_STATE_IDLE) end
+            if Chalutier.currentState == Chalutier.state.reelin then _changeState(Chalutier.state.idle) end
         end)
-
-    elseif state == Chalutier_STATE_LOOT then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/loot.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0, 0.8)
-
-    elseif state == Chalutier_STATE_INVFULL then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/invfull.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0, 0)
-
-    elseif state == Chalutier_STATE_FIGHT then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/fight.dds")
-        Chalutier.UI.blocInfo:SetColor(0.8, 0, 0)
-
-    elseif state == Chalutier_STATE_DEAD then
-        Chalutier.UI.Icon:SetTexture("Chalutier/textures/dead.dds")
-        Chalutier.UI.blocInfo:SetColor(0, 0, 0)
-
     end
+
+    Chalutier.UI.Icon:SetTexture("Chalutier/textures/" .. Chalutier.SavedVariables.colors[state].icon .. ".dds")
+    Chalutier.UI.blocInfo:SetColor(Chalutier.SavedVariables.colors[state].r, Chalutier.SavedVariables.colors[state].g, Chalutier.SavedVariables.colors[state].b, Chalutier.SavedVariables.colors[state].a)
     Chalutier.currentState = state
     Chalutier.CallbackManager:FireCallbacks(Chalutier.name .. "StateChange", Chalutier.currentState)
 end
 
-local function lootRelease()
+local function _lootRelease()
     local action, _, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
     local angleDiv = ((math.deg(GetPlayerCameraHeading())-180) % 360) - Chalutier.angle
 
     if action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then
-        changeState(Chalutier_STATE_LOOKING)
+        _changeState(Chalutier.state.looking)
     elseif action then
-        changeState(Chalutier_STATE_LOOKAWAY)
+        _changeState(Chalutier.state.lookaway)
     elseif -30 < angleDiv and angleDiv < 30 then
-        changeState(Chalutier_STATE_DEPLETED)
+        _changeState(Chalutier.state.depleted)
     else
-        changeState(Chalutier_STATE_IDLE)
+        _changeState(Chalutier.state.idle)
     end
 end
 
 function _LootSceneCB(oldState, newState)
     if newState == "showing" then -- LOOT, INVFULL
         if (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK)) <= 0 then
-            changeState(Chalutier_STATE_INVFULL)
+            _changeState(Chalutier.state.invfull)
         else
-            changeState(Chalutier_STATE_LOOT)
+            _changeState(Chalutier.state.loot)
         end
     end
     if newState == "hiding" then -- IDLE
-        lootRelease()
+        _lootRelease()
         LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
     end
 end
@@ -140,8 +118,8 @@ local tmpNotMoving = true
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
-    if action and IsPlayerTryingToMove() and Chalutier.currentState < Chalutier_STATE_FISHING then
-        changeState(Chalutier_STATE_LOOKAWAY)
+    if action and IsPlayerTryingToMove() and Chalutier.currentState < Chalutier.state.fishing then
+        _changeState(Chalutier.state.lookaway)
         tmpInteractableName = ""
         tmpNotMoving = false
         EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "MOVING", 400, function()
@@ -153,27 +131,70 @@ function Chalutier_OnAction()
 
     elseif action and additionalInfo == ADDITIONAL_INTERACT_INFO_FISHING_NODE then -- NOBAIT, LOOKING
         if not GetFishingLure() then
-            changeState(Chalutier_STATE_NOBAIT)
-        elseif Chalutier.currentState < Chalutier_STATE_FISHING and tmpNotMoving then
-            changeState(Chalutier_STATE_LOOKING)
+            _changeState(Chalutier.state.nobait)
+        elseif Chalutier.currentState < Chalutier.state.fishing and tmpNotMoving then
+            _changeState(Chalutier.state.looking)
             tmpInteractableName = interactableName
         end
 
     elseif action and tmpInteractableName == interactableName then -- FISHING, REELIN+
-        if Chalutier.currentState > Chalutier_STATE_FISHING then return end
-        changeState(Chalutier_STATE_FISHING)
+        if Chalutier.currentState > Chalutier.state.fishing then return end
+        _changeState(Chalutier.state.fishing)
 
     elseif action then -- LOOKAWAY
-        changeState(Chalutier_STATE_LOOKAWAY)
+        _changeState(Chalutier.state.lookaway)
         tmpInteractableName = ""
 
-    elseif Chalutier.currentState ~= Chalutier_STATE_DEPLETED then -- IDLE
-        changeState(Chalutier_STATE_IDLE)
+    elseif Chalutier.currentState ~= Chalutier.state.depleted then -- IDLE
+        _changeState(Chalutier.state.idle)
         tmpInteractableName = ""
     end
 end
 
-local function Chalutier_OnAddOnLoad(eventCode, addOnName)
+local function _createUI()
+    Chalutier.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
+    Chalutier.UI:SetMouseEnabled(true)
+    Chalutier.UI:SetClampedToScreen(true)
+    Chalutier.UI:SetMovable(true)
+    Chalutier.UI:SetDimensions(64, 92)
+    Chalutier.UI:SetDrawLevel(0)
+    Chalutier.UI:SetDrawLayer(DL_MAX_VALUE-1)
+    Chalutier.UI:SetDrawTier(DT_MAX_VALUE-1)
+    Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
+
+    Chalutier.UI:ClearAnchors()
+    Chalutier.UI:SetAnchor(Chalutier.SavedVariables.anchorRel, GuiRoot, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy)
+
+    Chalutier.UI.blocInfo = WINDOW_MANAGER:CreateControl(nil, Chalutier.UI, CT_TEXTURE)
+    Chalutier.UI.blocInfo:SetDimensions(64, 6)
+    Chalutier.UI.blocInfo:SetColor(Chalutier.SavedVariables.colors[Chalutier.currentState].r, Chalutier.SavedVariables.colors[Chalutier.currentState].g, Chalutier.SavedVariables.colors[Chalutier.currentState].b, Chalutier.SavedVariables.colors[Chalutier.currentState].a)
+    Chalutier.UI.blocInfo:SetAnchor(TOP, Chalutier.UI, TOP, 0, blocInfo)
+    Chalutier.UI.blocInfo:SetHidden(not Chalutier.SavedVariables.enabled)
+    Chalutier.UI.blocInfo:SetDrawLevel(0)
+    Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
+    Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
+
+    Chalutier.UI.Icon = WINDOW_MANAGER:CreateControl(nil, Chalutier.UI, CT_TEXTURE)
+    Chalutier.UI.Icon:SetBlendMode(TEX_BLEND_MODE_ALPHA)
+    Chalutier.UI.Icon:SetTexture("Chalutier/textures/" .. Chalutier.SavedVariables.colors[Chalutier.currentState].icon .. ".dds")
+    Chalutier.UI.Icon:SetDimensions(64, 64)
+    Chalutier.UI.Icon:SetAnchor(TOPLEFT, Chalutier.UI, TOPLEFT, 0, 18)
+    Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)
+    Chalutier.UI.Icon:SetDrawLevel(0)
+    Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
+    Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
+
+    Chalutier.UI:SetHandler("OnMoveStop", function()
+        _, Chalutier.SavedVariables.anchorRel, _, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy, _ = Chalutier.UI:GetAnchor()
+    end, Chalutier.name)
+
+    local chalutier_fragment = ZO_SimpleSceneFragment:New(Chalutier.UI)
+    HUD_SCENE:AddFragment(chalutier_fragment)
+    HUD_UI_SCENE:AddFragment(chalutier_fragment)
+    LOOT_SCENE:AddFragment(chalutier_fragment)
+end
+
+local function _onAddOnLoad(eventCode, addOnName)
     if (Chalutier.name ~= addOnName) then return end
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED)
 
@@ -183,62 +204,26 @@ local function Chalutier_OnAddOnLoad(eventCode, addOnName)
         libMainMenuSubcategoryButton:SetDrawTier(DT_MIN_VALUE)
     end
 
-    Chalutier.vars = ZO_SavedVars:NewAccountWide("ChalutierSV", 1, nil, Chalutier.defaults)
-
+    Chalutier.SavedVariables = ZO_SavedVars:NewAccountWide("ChalutierSV", 1, nil, Chalutier.defaults)
     Chalutier.CallbackManager = ZO_CallbackObject:New()
+    Chalutier.currentState = Chalutier.state.idle
 
-    Chalutier.UI = WINDOW_MANAGER:CreateControl(nil, GuiRoot, CT_TOPLEVELCONTROL)
-    Chalutier.UI:SetMouseEnabled(true)
-    Chalutier.UI:SetClampedToScreen(true)
-    Chalutier.UI:SetMovable(true)
-    Chalutier.UI:SetDimensions(64, 92)
-    Chalutier.UI:SetDrawLevel(0)
-    Chalutier.UI:SetDrawLayer(DL_MAX_VALUE-1)
-    Chalutier.UI:SetDrawTier(DT_MAX_VALUE-1)
-
-    Chalutier.UI:SetHidden(not Chalutier.vars.enabled)
-    Chalutier.UI:ClearAnchors()
-    Chalutier.UI:SetAnchor(TOPLEFT, GuiRoot, TOPLEFT, 0, 0)
-
-    Chalutier.UI.blocInfo = WINDOW_MANAGER:CreateControl(nil, Chalutier.UI, CT_TEXTURE)
-    Chalutier.UI.blocInfo:SetDimensions(64, 6)
-    Chalutier.UI.blocInfo:SetColor(1, 1, 1)
-    Chalutier.UI.blocInfo:SetAnchor(TOP, Chalutier.UI, TOP, 0, blocInfo)
-    Chalutier.UI.blocInfo:SetHidden(false)
-    Chalutier.UI.blocInfo:SetDrawLevel(0)
-    Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
-    Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
-
-    Chalutier.UI.Icon = WINDOW_MANAGER:CreateControl(nil, Chalutier.UI, CT_TEXTURE)
-    Chalutier.UI.Icon:SetBlendMode(TEX_BLEND_MODE_ALPHA)
-    Chalutier.UI.Icon:SetTexture("Chalutier/textures/idle.dds")
-    Chalutier.UI.Icon:SetDimensions(64, 64)
-    Chalutier.UI.Icon:SetAnchor(TOPLEFT, Chalutier.UI, TOPLEFT, 0, 18)
-    Chalutier.UI.Icon:SetHidden(false)
-    Chalutier.UI.Icon:SetDrawLevel(0)
-    Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
-    Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
-    Chalutier.currentState = Chalutier_STATE_IDLE
-
-    local chalutier_fragment = ZO_SimpleSceneFragment:New(Chalutier.UI)
-    HUD_SCENE:AddFragment(chalutier_fragment)
-    HUD_UI_SCENE:AddFragment(chalutier_fragment)
-    LOOT_SCENE:AddFragment(chalutier_fragment)
+    _createUI()
 
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
 
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_SWIMMING, function(eventCode) Chalutier.swimming = true end)
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_NOT_SWIMMING, function(eventCode) Chalutier.swimming = false end)
-    EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_DEAD, function(eventCode) changeState(Chalutier_STATE_DEAD, true) end)
-    EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_ALIVE, function(eventCode) changeState(Chalutier_STATE_IDLE) end)
+    EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_DEAD, function(eventCode) _changeState(Chalutier.state.dead, true) end)
+    EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_ALIVE, function(eventCode) _changeState(Chalutier.state.idle) end)
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_COMBAT_STATE, function(eventCode, inCombat)
         if inCombat then
-            changeState(Chalutier_STATE_FIGHT)
-        elseif Chalutier.currentState == Chalutier_STATE_FIGHT then
-            changeState(Chalutier_STATE_IDLE, true)
+            _changeState(Chalutier.state.fight)
+        elseif Chalutier.currentState == Chalutier.state.fight then
+            _changeState(Chalutier.state.idle, true)
         end
     end)
 end
 
-EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED, function(...) Chalutier_OnAddOnLoad(...) end)
+EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED, function(...) _onAddOnLoad(...) end)

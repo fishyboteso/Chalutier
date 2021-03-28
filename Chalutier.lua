@@ -65,7 +65,9 @@ local function _changeState(state, overwrite)
     elseif state == Chalutier.state.fishing then
         Chalutier.angle = (math.deg(GetPlayerCameraHeading())-180) % 360
 
-        LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
+        if not GetSetting_Bool(SETTING_TYPE_LOOT, LOOT_SETTING_AUTO_LOOT) then -- false = auto_loot off
+            LOOT_SCENE:RegisterCallback("StateChange", _LootSceneCB)
+        end
         EVENT_MANAGER:RegisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.reelin) end
         end)
@@ -145,6 +147,9 @@ function Chalutier_OnAction()
     elseif action then -- LOOKAWAY
         _changeState(Chalutier.state.lookaway)
         tmpInteractableName = ""
+
+    elseif Chalutier.currentState == Chalutier.state.reelin and GetSetting_Bool(SETTING_TYPE_LOOT, LOOT_SETTING_AUTO_LOOT) then --DEPLETED
+        _lootRelease()
 
     elseif Chalutier.currentState ~= Chalutier.state.depleted then -- IDLE
         _changeState(Chalutier.state.idle)

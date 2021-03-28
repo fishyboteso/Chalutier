@@ -32,11 +32,11 @@ Chalutier.defaults  = {
         [ 1] = { icon = "idle", text = "Looking Away", r = 0.3, g = 0, b = 0.3, a = 1 },
         [ 2] = { icon = "looking", text = "Looking at Fishing Hole", r = 0.3961, g = 0.2706, b = 0, a = 1 },
         [ 3] = { icon = "depleted", text = "Fishing Hole Depleted", r = 0, g = 0.3, b = 0.3, a = 1 },
-        [ 5] = { icon = "nobait", text = "No Bait Equipped", r = 0, g = 0, b = 0, a = 1 },
+        [ 5] = { icon = "nobait", text = "No Bait Equipped", r = 1, g = 0.8, b = 0, a = 1 },
         [ 6] = { icon = "fishing", text = "Fishing", r = 0.2980, g = 0.6118, b = 0.8392, a = 1 },
         [ 7] = { icon = "reelin", text = "Reel In!", r = 0, g = 0.8, b = 0, a = 1 },
         [ 8] = { icon = "loot", text = "Loot Menu", r = 0, g = 0, b = 0.8, a = 1 },
-        [ 9] = { icon = "invfull", text = "Inventory Full", r = 0, g = 0, b = 0, a = 1 },
+        [ 9] = { icon = "invfull", text = "Inventory Full", r = 0, g = 0, b = 0.2, a = 1 },
         [14] = { icon = "fight", text = "Fighting", r = 0.8, g = 0, b = 0, a = 1 },
         [15] = { icon = "dead", text = "Dead", r = 0, g = 0, b = 0, a = 1 }
     }

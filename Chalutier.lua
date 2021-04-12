@@ -300,6 +300,8 @@ local function _onAddOnLoad(eventCode, addOnName)
             _changeState(Chalutier.state.idle, true)
         end
     end)
+    
+    EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "SET_HIDDEN", 4000, function() Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled) end)
 end
 
 EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED, function(...) _onAddOnLoad(...) end)

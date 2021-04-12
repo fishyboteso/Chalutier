@@ -3,8 +3,8 @@
 ## Author: Provision, Sem
 ## SavedVariables: ChalutierSV
 ## APIVersion: 100033 100034
-## Version: 1.1.2
-## AddOnVersion: 112
+## Version: 1.1.3
+## AddOnVersion: 113
 ## DependsOn: LibAddonMenu-2.0
 ## OptionalDependsOn: LibDebugLogger>=180, LibMainMenu>=9
 

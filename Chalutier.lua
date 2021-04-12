@@ -52,13 +52,13 @@ local function _changeState(state, overwrite)
 
     if Chalutier.swimming and state == Chalutier.state.looking then state = Chalutier.state.lookaway end
 
-    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_REELIN")
-    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_FISHING")
-    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_DEPLETED")
+    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_REELIN_END")
+    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_FISHING_INTERRUPT")
+    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_DEPLETED_END")
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
     if state == Chalutier.state.depleted then
-        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_DEPLETED", 3000, function()
+        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_DEPLETED_END", 3000, function()
             if Chalutier.currentState == Chalutier.state.depleted then _changeState(Chalutier.state.idle) end
         end)
 
@@ -71,12 +71,12 @@ local function _changeState(state, overwrite)
         EVENT_MANAGER:RegisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.reelin) end
         end)
-        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_FISHING", 28000, function()
+        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_FISHING_INTERRUPT", 28000, function()
             if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.idle) end
         end)
 
     elseif state == Chalutier.state.reelin then
-        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_REELIN", 3000, function()
+        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_REELIN_END", 3000, function()
             if Chalutier.currentState == Chalutier.state.reelin then _changeState(Chalutier.state.idle) end
         end)
     end
@@ -84,7 +84,7 @@ local function _changeState(state, overwrite)
     Chalutier.UI.Icon:SetTexture("Chalutier/textures/" .. Chalutier.SavedVariables.colors[state].icon .. ".dds")
     Chalutier.UI.blocInfo:SetColor(Chalutier.SavedVariables.colors[state].r, Chalutier.SavedVariables.colors[state].g, Chalutier.SavedVariables.colors[state].b, Chalutier.SavedVariables.colors[state].a)
     Chalutier.currentState = state
-    Chalutier.CallbackManager:FireCallbacks(Chalutier.name .. "StateChange", Chalutier.currentState)
+    Chalutier.CallbackManager:FireCallbacks(Chalutier.name .. "CHALUTIER_STATE_CHANGE", Chalutier.currentState)
 end
 
 local function _lootRelease()

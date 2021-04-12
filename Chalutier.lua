@@ -38,7 +38,7 @@ Chalutier.defaults  = {
         [ 8] = { icon = "loot", text = "Loot Menu", r = 0, g = 0, b = 0.8, a = 1 },
         [ 9] = { icon = "invfull", text = "Inventory Full", r = 0, g = 0, b = 0.2, a = 1 },
         [14] = { icon = "fight", text = "Fighting", r = 0.8, g = 0, b = 0, a = 1 },
-        [15] = { icon = "dead", text = "Dead", r = 0, g = 0, b = 0, a = 1 }
+        [15] = { icon = "dead", text = "Dead", r = 0.2, g = 0.2, b = 0.2, a = 1 }
     }
 }
 
@@ -279,7 +279,7 @@ local function _onAddOnLoad(eventCode, addOnName)
         libMainMenuSubcategoryButton:SetDrawTier(DT_MIN_VALUE)
     end
 
-    Chalutier.SavedVariables = ZO_SavedVars:NewAccountWide("ChalutierSV", 1, nil, Chalutier.defaults)
+    Chalutier.SavedVariables = ZO_SavedVars:NewAccountWide("ChalutierSV", 2, nil, Chalutier.defaults)
     Chalutier.CallbackManager = ZO_CallbackObject:New()
     Chalutier.currentState = Chalutier.state.idle
 

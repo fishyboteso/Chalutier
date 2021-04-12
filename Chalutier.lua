@@ -264,6 +264,7 @@ local function _createMenu()
                 Chalutier.UI.blocInfo:SetColor(sav.r, sav.g, sav.b, sav.a)
             end,
             default = {["r"] = def.r, ["g"] = def.g, ["b"] = def.b, ["a"] = def.a},
+            requiresReload = true,
         }
     end
 

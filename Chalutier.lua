@@ -103,16 +103,17 @@ local function _lootRelease()
 end
 
 function _LootSceneCB(oldState, newState)
-    if newState == "showing" then -- LOOT, INVFULL
+    if newState == SCENE_HIDDEN then -- IDLE
+        _lootRelease()
+        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
+    elseif Chalutier.currentState ~= Chalutier.state.reelin and Chalutier.currentState ~= Chalutier.state.loot then -- fishing interrupted
+        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
+    elseif newState == SCENE_SHOWN then -- LOOT, INVFULL
         if (GetBagUseableSize(BAG_BACKPACK) - GetNumBagUsedSlots(BAG_BACKPACK)) <= 0 then
             _changeState(Chalutier.state.invfull)
         else
             _changeState(Chalutier.state.loot)
         end
-    end
-    if newState == "hiding" then -- IDLE
-        _lootRelease()
-        LOOT_SCENE:UnregisterCallback("StateChange", _LootSceneCB)
     end
 end
 

@@ -1,4 +1,4 @@
-### ProvisionsChalutier 1.1.0
+### ProvisionsChalutier
 
 Chalutier is a user Interface for The Elder Scrolls Online, designed to show fishing states.
 

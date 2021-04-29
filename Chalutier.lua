@@ -127,8 +127,8 @@ function Chalutier_OnAction()
         tmpInteractableName = ""
         tmpNotMoving = false
         EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "MOVING", 400, function()
-            EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "MOVING")
             if not IsPlayerTryingToMove() then
+                EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "MOVING")
                 tmpNotMoving = true
             end
         end)

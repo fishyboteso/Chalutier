@@ -291,6 +291,14 @@ local function _onAddOnLoad(eventCode, addOnName)
     ZO_PreHookHandler(RETICLE.interact, "OnEffectivelyShown", Chalutier_OnAction)
     ZO_PreHookHandler(RETICLE.interact, "OnHide", Chalutier_OnAction)
 
+    if AmIBlocking then
+        AmIBlocking.CallbackManager:RegisterCallback(AmIBlocking.name .. "BLOCKING_STATE_CHANGE", function(condition)
+            if condition == true then
+                _changeState(Chalutier.state.idle)
+            end
+        end)
+    end
+
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_SWIMMING, function(eventCode) Chalutier.swimming = true end)
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_NOT_SWIMMING, function(eventCode) Chalutier.swimming = false end)
     EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_PLAYER_DEAD, function(eventCode) _changeState(Chalutier.state.dead, true) end)

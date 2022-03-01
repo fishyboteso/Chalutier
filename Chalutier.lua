@@ -27,6 +27,7 @@ Chalutier.defaults  = {
     posy        = 0,
     anchor      = 3,
     anchorRel   = 3,
+    showInUI    = true,
     colors      = {
         [ 0] = { icon = "idle", text = "Idle",  r = 1, g = 1, b = 1, a = 1 },
         [ 1] = { icon = "idle", text = "Looking Away", r = 0.3, g = 0, b = 0.3, a = 1 },
@@ -195,10 +196,12 @@ local function _createUI()
         _, Chalutier.SavedVariables.anchorRel, _, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy, _ = Chalutier.UI:GetAnchor()
     end, Chalutier.name)
 
-    local chalutier_fragment = ZO_SimpleSceneFragment:New(Chalutier.UI)
-    HUD_SCENE:AddFragment(chalutier_fragment)
-    HUD_UI_SCENE:AddFragment(chalutier_fragment)
-    LOOT_SCENE:AddFragment(chalutier_fragment)
+    Chalutier.fragment = ZO_SimpleSceneFragment:New(Chalutier.UI)
+    HUD_SCENE:AddFragment(Chalutier.fragment)
+    LOOT_SCENE:AddFragment(Chalutier.fragment)
+    if Chalutier.SavedVariables.showInUI == true then
+        HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+    end
 end
 
 local function _createMenu()
@@ -217,14 +220,40 @@ local function _createMenu()
         {
             type = "checkbox",
             name = "Set Chalutier visibility:",
-            default = true,
+            default = Chalutier.SavedVariables.enabled,
             disabled = false,
             getFunc = function() return Chalutier.SavedVariables.enabled end,
             setFunc = function(value)
                 Chalutier.SavedVariables.enabled = value
-                Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
+                if value == true then
+                    HUD_SCENE:AddFragment(Chalutier.fragment)
+                    LOOT_SCENE:AddFragment(Chalutier.fragment)
+                    if Chalutier.SavedVariables.showInUI == true then
+                        HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+                    end
+                else 
+                    HUD_SCENE:RemoveFragment(Chalutier.fragment)
+                    LOOT_SCENE:RemoveFragment(Chalutier.fragment)
+                    HUD_UI_SCENE:RemoveFragment(Chalutier.fragment)
+                end
+                --[[Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
                 Chalutier.UI.blocInfo:SetHidden(not Chalutier.SavedVariables.enabled)
-                Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)
+                Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)]]
+            end
+        },
+        {
+            type = "checkbox",
+            name = "Show Chalutier in UI:",
+            default = Chalutier.SavedVariables.showInUI,
+            disabled = false,
+            getFunc = function() return Chalutier.SavedVariables.showInUI end,
+            setFunc = function(value)
+                Chalutier.SavedVariables.showInUI = value
+                if value == true then
+                    HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+                else
+                    HUD_UI_SCENE:RemoveFragment(Chalutier.fragment)
+                end
             end
         },
         {
@@ -245,7 +274,7 @@ local function _createMenu()
         },
     }
 
-    for k,v in pairs(Chalutier.defaults.colors) do
+    for k,v in pairs(Chalutier.SavedVariables.colors) do
         local def = Chalutier.defaults.colors[k]
         local sav = Chalutier.SavedVariables.colors[k]
         optionsData[#optionsData + 1] = {
@@ -319,7 +348,16 @@ local function _onAddOnLoad(eventCode, addOnName)
         end
     end)
     
-    EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "SET_HIDDEN", 4000, function() Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled) end)
+    EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "SET_HIDDEN", 4000, function()     
+        if Chalutier.SavedVariables.enabled == true then
+            HUD_SCENE:AddFragment(Chalutier.fragment)
+            LOOT_SCENE:AddFragment(Chalutier.fragment)
+            if Chalutier.SavedVariables.showInUI == true then
+                HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+            end
+        end
+        --Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
+    end)
 end
 
 EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED, function(...) _onAddOnLoad(...) end)

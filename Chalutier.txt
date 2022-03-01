@@ -1,10 +1,10 @@
 ## Title: Chalutier
-## Description: Icons for fishing state and more. |c000088Version: 1.1.4|r
+## Description: Icons for fishing state and more. |c000088Version: 1.2|r
 ## Author: |c00C000Provision|r, |c0000C0Sem|r
 ## SavedVariables: ChalutierSV
-## APIVersion: 100033 100034
-## Version: 1.1.4
-## AddOnVersion: 114
+## APIVersion: 101032 101033
+## Version: 1.2.0
+## AddOnVersion: 120
 ## DependsOn: LibAddonMenu-2.0
 ## OptionalDependsOn: LibDebugLogger>=180, LibMainMenu>=9, AmIBlocking>=27
 

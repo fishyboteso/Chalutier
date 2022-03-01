@@ -215,12 +215,8 @@ local function _createMenu()
     local panel = LAM2:RegisterAddonPanel(panelName, panelData)
     local optionsData = {
         {
-            type = "description",
-            text = "Here you can setup Chalutiers configs."
-        },
-        {
             type = "checkbox",
-            name = "Enabled",
+            name = "Set Chalutier visibility:",
             default = true,
             disabled = false,
             getFunc = function() return Chalutier.SavedVariables.enabled end,
@@ -245,7 +241,7 @@ local function _createMenu()
         },
         {
             type = "header",
-            name = "Colors"
+            name = "State Colors"
         },
     }
 
@@ -267,6 +263,18 @@ local function _createMenu()
             requiresReload = true,
         }
     end
+
+
+    if AmIBlocking.CallbackManager then
+        optionsData[#optionsData + 1] = {
+            type = "header",
+            name = "Addon Integration"
+        }
+        optionsData[#optionsData + 1] = {
+            type = "description",
+            text = "'Am I Blocking' was detected."
+        }
+    end        
 
     LAM2:RegisterOptionControls(panelName, optionsData)
 end

@@ -264,16 +264,18 @@ local function _createMenu()
     end
 
 
-    if AmIBlocking.CallbackManager then
-        optionsData[#optionsData + 1] = {
-            type = "header",
-            name = "Addon Integration"
-        }
-        optionsData[#optionsData + 1] = {
-            type = "description",
-            text = "'Am I Blocking' was detected."
-        }
-    end        
+    if AmIBlocking then
+        if AmIBlocking.CallbackManager then
+            optionsData[#optionsData + 1] = {
+                type = "header",
+                name = "Addon Integration"
+            }
+            optionsData[#optionsData + 1] = {
+                type = "description",
+                text = "'Am I Blocking' was detected."
+            }
+        end
+    end
 
     LAM2:RegisterOptionControls(panelName, optionsData)
 end

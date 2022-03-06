@@ -53,7 +53,6 @@ local function _changeState(state, overwrite)
     if Chalutier.swimming and state == Chalutier.state.looking then state = Chalutier.state.lookaway end
 
     EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_REELIN_END")
-    EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_FISHING_INTERRUPT")
     EVENT_MANAGER:UnregisterForUpdate(Chalutier.name .. "STATE_DEPLETED_END")
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
 
@@ -70,9 +69,6 @@ local function _changeState(state, overwrite)
         end
         EVENT_MANAGER:RegisterForEvent(Chalutier.name .. "OnSlotUpdate", EVENT_INVENTORY_SINGLE_SLOT_UPDATE, function()
             if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.reelin) end
-        end)
-        EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "STATE_FISHING_INTERRUPT", 28000, function()
-            if Chalutier.currentState == Chalutier.state.fishing then _changeState(Chalutier.state.idle) end
         end)
 
     elseif state == Chalutier.state.reelin then
@@ -122,7 +118,10 @@ local tmpNotMoving = true
 function Chalutier_OnAction()
     local action, interactableName, _, _, additionalInfo = GetGameCameraInteractableActionInfo()
 
-    if action and IsPlayerTryingToMove() and Chalutier.currentState < Chalutier.state.fishing then
+    if action and (Chalutier.currentState == Chalutier.state.fishing or Chalutier.currentState == Chalutier.state.reeling) and INTERACTION_FISH ~= GetInteractionType() then -- fishing interrupted
+        _changeState(Chalutier.state.idle)
+
+    elseif action and IsPlayerTryingToMove() and Chalutier.currentState < Chalutier.state.fishing then
         _changeState(Chalutier.state.lookaway)
         tmpInteractableName = ""
         tmpNotMoving = false
@@ -141,7 +140,7 @@ function Chalutier_OnAction()
             tmpInteractableName = interactableName
         end
 
-    elseif action and tmpInteractableName == interactableName then -- FISHING, REELIN+
+    elseif action and tmpInteractableName == interactableName and INTERACTION_FISH == GetInteractionType() then -- FISHING, REELIN+
         if Chalutier.currentState > Chalutier.state.fishing then return end
         _changeState(Chalutier.state.fishing)
 

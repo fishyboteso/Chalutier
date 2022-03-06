@@ -166,7 +166,7 @@ local function _createUI()
     Chalutier.UI:SetDrawLevel(0)
     Chalutier.UI:SetDrawLayer(DL_MAX_VALUE-1)
     Chalutier.UI:SetDrawTier(DT_MAX_VALUE-1)
-    Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
+    Chalutier.UI:SetHidden(false)
 
     Chalutier.UI:ClearAnchors()
     Chalutier.UI:SetAnchor(Chalutier.SavedVariables.anchorRel, GuiRoot, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy)
@@ -175,7 +175,7 @@ local function _createUI()
     Chalutier.UI.blocInfo:SetDimensions(64, 6)
     Chalutier.UI.blocInfo:SetColor(Chalutier.SavedVariables.colors[Chalutier.currentState].r, Chalutier.SavedVariables.colors[Chalutier.currentState].g, Chalutier.SavedVariables.colors[Chalutier.currentState].b, Chalutier.SavedVariables.colors[Chalutier.currentState].a)
     Chalutier.UI.blocInfo:SetAnchor(TOP, Chalutier.UI, TOP, 0, blocInfo)
-    Chalutier.UI.blocInfo:SetHidden(not Chalutier.SavedVariables.enabled)
+    Chalutier.UI.blocInfo:SetHidden(false)
     Chalutier.UI.blocInfo:SetDrawLevel(0)
     Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
     Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
@@ -185,7 +185,7 @@ local function _createUI()
     Chalutier.UI.Icon:SetTexture("Chalutier/textures/" .. Chalutier.SavedVariables.colors[Chalutier.currentState].icon .. ".dds")
     Chalutier.UI.Icon:SetDimensions(64, 64)
     Chalutier.UI.Icon:SetAnchor(TOPLEFT, Chalutier.UI, TOPLEFT, 0, 18)
-    Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)
+    Chalutier.UI.Icon:SetHidden(false)
     Chalutier.UI.Icon:SetDrawLevel(0)
     Chalutier.UI.blocInfo:SetDrawLayer(DL_MAX_VALUE)
     Chalutier.UI.blocInfo:SetDrawTier(DT_MAX_VALUE)
@@ -194,11 +194,12 @@ local function _createUI()
         _, Chalutier.SavedVariables.anchorRel, _, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy, _ = Chalutier.UI:GetAnchor()
     end, Chalutier.name)
 
-    local chalutier_fragment = ZO_SimpleSceneFragment:New(Chalutier.UI)
-    HUD_SCENE:AddFragment(chalutier_fragment)
-    HUD_UI_SCENE:AddFragment(chalutier_fragment)
-    LOOT_SCENE:AddFragment(chalutier_fragment)
+    Chalutier.fragment = ZO_HUDFadeSceneFragment:New(Chalutier.UI)
+    HUD_SCENE:AddFragment(Chalutier.fragment)
+    HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+    LOOT_SCENE:AddFragment(Chalutier.fragment)
 end
+
 
 local function _createMenu()
     local panelName = "ChalutierSettingsPanel"
@@ -212,23 +213,56 @@ local function _createMenu()
         registerForDefaults = true,
     }
     local panel = LAM2:RegisterAddonPanel(panelName, panelData)
+
+
+    panel:SetHandler("OnEffectivelyHidden", function()
+        _, Chalutier.SavedVariables.anchorRel, _, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy, _ = Chalutier.UI:GetAnchor()
+        if Chalutier.SavedVariables.enabled == true then
+            HUD_SCENE:AddFragment(Chalutier.fragment)
+            HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+            LOOT_SCENE:AddFragment(Chalutier.fragment)
+        else
+            HUD_SCENE:RemoveFragment(Chalutier.fragment)
+            HUD_UI_SCENE:RemoveFragment(Chalutier.fragment)
+            LOOT_SCENE:RemoveFragment(Chalutier.fragment)
+            Chalutier.UI:SetHidden(true)
+        end
+    end)
+
     local optionsData = {
         {
             type = "checkbox",
             name = "Set Chalutier visibility:",
-            default = true,
+            default = Chalutier.SavedVariables.enabled,
             disabled = false,
             getFunc = function() return Chalutier.SavedVariables.enabled end,
             setFunc = function(value)
-                Chalutier.SavedVariables.enabled = value
-                Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled)
-                Chalutier.UI.blocInfo:SetHidden(not Chalutier.SavedVariables.enabled)
-                Chalutier.UI.Icon:SetHidden(not Chalutier.SavedVariables.enabled)
+                if Chalutier.SavedVariables.enabled == true then
+                    HUD_SCENE:RemoveFragment(Chalutier.fragment)
+                    HUD_UI_SCENE:RemoveFragment(Chalutier.fragment)
+                    LOOT_SCENE:RemoveFragment(Chalutier.fragment)
+                    Chalutier.SavedVariables.enabled = false
+                else
+                    HUD_SCENE:AddFragment(Chalutier.fragment)
+                    HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+                    LOOT_SCENE:AddFragment(Chalutier.fragment)
+                    Chalutier.SavedVariables.enabled = true
+                end
             end
         },
         {
             type = "button",
-            name = "move to top left corner",
+            name = "Show Chalutier now",
+            func = function()
+                HUD_UI_SCENE:AddFragment(Chalutier.fragment)
+                Chalutier.UI:SetHidden(false)
+            end,
+            width = "half",
+            requiresReload = false,
+        },
+        {
+            type = "button",
+            name = "Move to top left corner",
             default = true,
             disabled = false,
             func = function()
@@ -236,7 +270,9 @@ local function _createMenu()
                 Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy = 0, 0
                 Chalutier.UI:ClearAnchors()
                 Chalutier.UI:SetAnchor(Chalutier.SavedVariables.anchorRel, GuiRoot, Chalutier.SavedVariables.anchor, Chalutier.SavedVariables.posx, Chalutier.SavedVariables.posy)
-            end
+            end,
+            width = "half",
+            requiresReload = false,
         },
         {
             type = "header",
@@ -320,7 +356,6 @@ local function _onAddOnLoad(eventCode, addOnName)
         end
     end)
 
-    EVENT_MANAGER:RegisterForUpdate(Chalutier.name .. "SET_HIDDEN", 4000, function() Chalutier.UI:SetHidden(not Chalutier.SavedVariables.enabled) end)
 end
 
 EVENT_MANAGER:RegisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED, function(...) _onAddOnLoad(...) end)

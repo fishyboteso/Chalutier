@@ -320,12 +320,6 @@ local function _onAddOnLoad(eventCode, addOnName)
     if (Chalutier.name ~= addOnName) then return end
     EVENT_MANAGER:UnregisterForEvent(Chalutier.name, EVENT_ADD_ON_LOADED)
 
---TODO remove with minion 4
-    if libMainMenuSubcategoryButton then
-        libMainMenuSubcategoryButton:SetDrawLayer(DL_MIN_VALUE)
-        libMainMenuSubcategoryButton:SetDrawTier(DT_MIN_VALUE)
-    end
-
     Chalutier.SavedVariables = ZO_SavedVars:NewAccountWide("ChalutierSV", 2, nil, Chalutier.defaults)
     Chalutier.CallbackManager = ZO_CallbackObject:New()
     Chalutier.currentState = Chalutier.state.idle

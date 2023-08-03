@@ -179,20 +179,6 @@ local function _createMenu()
         }
     end
 
-
-    if AmIBlocking then
-        if AmIBlocking.CallbackManager then
-            optionsData[#optionsData + 1] = {
-                type = "header",
-                name = "Addon Integration"
-            }
-            optionsData[#optionsData + 1] = {
-                type = "description",
-                text = "'Am I Blocking' was detected."
-            }
-        end
-    end
-
     LAM2:RegisterOptionControls(panelName, optionsData)
 end
 
@@ -205,14 +191,6 @@ local function _onAddOnLoad(eventCode, addOnName)
 
     _createUI()
     _createMenu()
-
-    if AmIBlocking then
-        AmIBlocking.CallbackManager:RegisterCallback(AmIBlocking.name .. "BLOCKING_STATE_CHANGE", function(condition)
-            if condition == true then
-                _changeState(Chalutier.state.idle)
-            end
-        end)
-    end
 
     FishingStateMachine:registerOnStateChange(_setState)
 end
